@@ -29,7 +29,7 @@ def read_section_mike(path='',name=''):
             isMileage=True
 
         if(isPoint):
-            string=str(line).strip('\n').split('    ')
+            string=str(line).strip('\n').lstrip().split('    ')
             xy=(string[0],string[1])
             Section[Sec_name].append(xy)
             #print(string)
