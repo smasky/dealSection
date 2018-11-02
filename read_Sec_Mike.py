@@ -1,5 +1,7 @@
 '''
-
+从Mike中读取断面信息
+形成一个dict： key：断面里程 value:(x,y)元组的list
+Author:smasky
 '''
 import os 
 from global_variable import *
