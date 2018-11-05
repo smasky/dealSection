@@ -2,6 +2,9 @@
 存储全局变量
 '''
 Section={}
-Width=300
-Height={}
+New_Section={}
+G_num=0
+Num=0
+Width=200
+Height=5
 K=1/4

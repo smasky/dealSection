@@ -3,7 +3,7 @@
 形成一个dict： key：断面里程 value:(x,y)元组的list
 Author:smasky
 '''
-import os 
+import os
 from global_variable import *
 def read_section_mike(path='',name=''):
     """
@@ -22,7 +22,7 @@ def read_section_mike(path='',name=''):
     for line in file:
         if("LEVEL PARAMS" in line):
             isPoint=False
-        
+
         if(isMileage):
             Sec_name=str(line).strip('\n').replace(' ','')
             Section[Sec_name]=[]
@@ -31,19 +31,15 @@ def read_section_mike(path='',name=''):
             isMileage=True
 
         if(isPoint):
-            string=str(line).strip('\n').lstrip().split('    ')
-            xy=(string[0],string[1])
+            string=str(line).strip('\n').lstrip()
+            string=string.replace("     "," ").replace("    "," ").replace("   "," ").split(" ")
+            xy=(float(string[0]),float(string[1]))
             Section[Sec_name].append(xy)
             #print(string)
 
         if("PROFILE" in line):
             isPoint=True
-        
-        
-            
-#测试
-def main():
-    read_section_mike("E://aaaa.txt","HUAIHEZHUGAN1")
 
-if __name__ == '__main__':
-    main()
+
+
+#测试
