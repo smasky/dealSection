@@ -14,7 +14,7 @@ def write_mike(sec,filename):
         file.write("**************************\n")
 
 def write_mike_top(Mileage,ID,file):
-    file.write('TOPO_HUAIHEZHUGAN\n')
+    file.write('2013\n')
     file.write('HUAIHEZHUGAN\n')
     file.write("{}\n".format(Mileage))
     file.write("COORDINATES\n")
@@ -45,8 +45,9 @@ def write_middle(xy,file):
         x.append(value[0])
         y.append(value[1])
     min_y=y.index(min(y))
+    yy=y[min_y:]
     left_max=y.index(max(y[:y.index(min(y))]))
-    right_max=y.index(max(y[y.index(min(y)):]))+min_y
+    right_max=yy.index(max(y[y.index(min(y)):]))+min_y
     for i in range(len(x)):
         string="{}    {}    1.000    <#{}>    0    0.000    0\n"
         if(i==min_y):

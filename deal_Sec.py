@@ -99,7 +99,8 @@ def cal_left_up(sec_x,sec_y,l_b_points):
             index=i
             break
     if(index==-1):
-        return []
+        x=(sec_y[-1]-b)/k
+        return ((x,sec_y[-1]),len(sec_x))
     xy=cal_intersection_line([sec_x[index],sec_y[index],sec_x[index-1],sec_y[index-1]],(k,b))
     return (xy,index)
 def cal_right_up(sec_x,sec_y,r_b_points,left_len):
@@ -117,7 +118,8 @@ def cal_right_up(sec_x,sec_y,r_b_points,left_len):
             index=i
             break
     if(index==-1):
-        return ((sec_x[-1],sec_y[-1]),len(sec_x)+left_len)
+        x=(sec_y[-1]-b)/k
+        return ((x,sec_y[-1]),len(sec_x)+left_len)
     xy=cal_intersection_line([sec_x[index],sec_y[index],sec_x[index+1],sec_y[index+1]],(k,b))
     return (xy,index+left_len)
 def cal_intersect_points(Mileage,xy,d_height,width):
@@ -147,19 +149,51 @@ def cal_intersect_points(Mileage,xy,d_height,width):
     (lu_xy,lu_index)=cal_left_up(sec_x[:lb_index+1],sec_y[:lb_index+1],lb_xy)
     (ru_xy,ru_index)=cal_right_up(sec_x[rb_index-1:],sec_y[rb_index-1:],rb_xy,rb_index)
     #TODO: 计算挖掉的面积
-    sec_x[rb_index+1:ru_index+1]=[r_xy[0],rb_xy[0],ru_xy[0]]
+    sec_x[rb_index-1:ru_index+1]=[r_xy[0],rb_xy[0],ru_xy[0]]
     sec_x[lu_index:lb_index]=[lu_xy[0],lb_xy[0],l_xy[0]]
-    sec_y[rb_index+1:ru_index+1]=[r_xy[1],rb_xy[1],ru_xy[1]]
+    sec_y[rb_index-1:ru_index+1]=[r_xy[1],rb_xy[1],ru_xy[1]]
     sec_y[lu_index:lb_index]=[lu_xy[1],lb_xy[1],l_xy[1]]
     xy=[]
     for x,y in zip(sec_x,sec_y):
         xy.append((round(x,1),round(y,1)))
     return xy
-
+def cut_beach(Mileage,xy,d_height,width):
+    '''
+    切边滩
+    计算断面左右挖槽的高程点
+    '''
+    global G_num
+    sec_x=[]
+    sec_y=[]
+    for value in xy:
+        sec_x.append(value[0])
+        sec_y.append(value[1])
+    d_height=8-3*(float(Mileage)-138223)/(230743-138223)#六师兄挖槽专用
+    sec_min_x=find_min_index(sec_y)
+    #TODO: 左部分和右部分宽度分配的问题
+    if(sec_y[sec_min_x]>d_height):
+        G_num+=1
+        print('高程不符合')
+        return []
+    (l_xy,lb_index)=cal_index_left_bottom(sec_x[:sec_min_x+1],sec_y[:sec_min_x+1],d_height)
+    (r_xy,rb_index)=cal_index_right_bottom(sec_x[sec_min_x-1:],sec_y[sec_min_x-1:],d_height,sec_min_x)
+    lb_xy=(l_xy[0]-width/2,l_xy[1])
+    rb_xy=(r_xy[0]+width/2,r_xy[1])
+    (lu_xy,lu_index)=cal_left_up(sec_x[:lb_index+1],sec_y[:lb_index+1],lb_xy)
+    (ru_xy,ru_index)=cal_right_up(sec_x[rb_index-1:],sec_y[rb_index-1:],rb_xy,rb_index)
+    #TODO: 计算挖掉的面积
+    sec_x[rb_index:ru_index+1]=[r_xy[0],rb_xy[0],ru_xy[0]]
+    sec_x[lu_index:lb_index]=[lu_xy[0],lb_xy[0],l_xy[0]]
+    sec_y[rb_index:ru_index+1]=[r_xy[1],rb_xy[1],ru_xy[1]]
+    sec_y[lu_index:lb_index]=[lu_xy[1],lb_xy[1],l_xy[1]]
+    xy=[]
+    for x,y in zip(sec_x,sec_y):
+        xy.append((round(x,1),round(y,1)))
+    return xy
 def cal_all():
     global Num
     for key,xy in Section.items():
-        n_xy=cal_intersect_points(key,xy,Height,Width)
+        n_xy=cut_beach(key,xy,Height,Width)
         if(len(n_xy)==0):
             New_Section[key]=Section[key]
         else:
