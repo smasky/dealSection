@@ -13,10 +13,13 @@ from read_Sec_Mike import read_section_mike
 from global_variable import *
 from write_Sec_Mike import write_mike
 def read_height():
-    file=open("height.txt",'w')
+    '''
+    本地文件夹：height.txt 格式： 里程 高程
+    '''
+    file=open("height.txt",'r')
     for line in file:
-        string=line.strip('\n').split('\t')
-        Height[string[0]]=float(string[1])
+        string=line.strip('\n').split(' ')
+        Height[("%.3f"%float(string[0]))]=float(string[1])
     file.close()
 def find_min_index(x):
     '''
@@ -122,6 +125,49 @@ def cal_right_up(sec_x,sec_y,r_b_points,left_len):
         return ((x,sec_y[-1]),len(sec_x)+left_len)
     xy=cal_intersection_line([sec_x[index],sec_y[index],sec_x[index+1],sec_y[index+1]],(k,b))
     return (xy,index+left_len)
+def lr_width_distr(l_xy,r_xy,sec_x,width):
+    '''
+    return: (左边宽度,右边宽度)
+    '''
+    left=l_xy[0]-sec_x[0]
+    right=sec_x[-1]-r_xy[0]
+    c_width=width-(r_xy[0]-l_xy[0])
+    if(c_width<=0):
+        return []
+    w_left=c_width*left/(left+right)
+    w_right=c_width*right/(left+right)
+
+    return (w_left,w_right)
+def cal_right_area(r_xy,rb_xy,ru_xy,sec_x,sec_y):
+    '''
+    计算需要开挖的面积
+    return: area
+    '''
+    num=len(sec_x)+1
+    area=0
+    k=K
+    b=rb_xy[1]-k*rb_xy[0]
+    sec_x.append(ru_xy[0])
+    sec_y.append(ru_xy[1])
+    for i in range(num-1):
+        if(sec_x[i+1]<=rb_xy[0]):
+            area+=(sec_x[i+1]-sec_x[i])*(sec_y[i]-rb_xy[1]+sec_y[i+1]-rb_xy[1])/2
+        else:
+            area+=(sec_x[i+1]-sec_x[i])*(sec_y[i+1]-k*sec_x[i+1]-b+sec_y[i]-k*sec_x[i]-b)/2
+    return area
+def cal_left_area(l_xy,lb_xy,lu_xy,sec_x,sec_y):
+    num=len(sec_x)+1
+    area=0
+    k=-K
+    b=lb_xy[1]-k*lb_xy[0]
+    sec_x.append(lu_xy[0])
+    sec_y.append(lu_xy[1])
+    for i in range(num-1):
+        if(sec_x[i+1]>=lb_xy[0]):
+            area+=(sec_x[i+1]-sec_x[i])*(sec_y[i+1]-k*sec_x[i+1]-b+sec_y[i]-k*sec_x[i]-b)/2
+        else:
+            area+=(sec_x[i+1]-sec_x[i])*(sec_y[i]+sec_y[i+1]-2*lb_xy[1])/2
+    return area
 def cal_intersect_points(Mileage,xy,d_height,width):
     '''
     计算断面左右挖槽的高程点
@@ -132,23 +178,24 @@ def cal_intersect_points(Mileage,xy,d_height,width):
     for value in xy:
         sec_x.append(value[0])
         sec_y.append(value[1])
-    d_height=8-3*(float(Mileage)-138223)/(230743-138223)#六师兄挖槽专用
     sec_min_x=find_min_index(sec_y)
-    #TODO: 左部分和右部分宽度分配的问题
     if(sec_y[sec_min_x]>d_height):
         G_num+=1
         print('高程不符合')
         return []
     (l_xy,lb_index)=cal_index_left_bottom(sec_x[:sec_min_x+1],sec_y[:sec_min_x+1],d_height)
     (r_xy,rb_index)=cal_index_right_bottom(sec_x[sec_min_x-1:],sec_y[sec_min_x-1:],d_height,sec_min_x)
-    c_width=Width-(r_xy[0]-l_xy[0])
-    if(c_width<0):
+    c_width=lr_width_distr(l_xy,r_xy,sec_x,width) #合理分配 左右宽度
+    if(len(c_width)==0):
         return []
-    lb_xy=(l_xy[0]-c_width/2,l_xy[1])
-    rb_xy=(r_xy[0]+c_width/2,r_xy[1])
+    lb_xy=(l_xy[0]-c_width[0],l_xy[1])
+    rb_xy=(r_xy[0]+c_width[1],r_xy[1])
     (lu_xy,lu_index)=cal_left_up(sec_x[:lb_index+1],sec_y[:lb_index+1],lb_xy)
     (ru_xy,ru_index)=cal_right_up(sec_x[rb_index-1:],sec_y[rb_index-1:],rb_xy,rb_index)
     #TODO: 计算挖掉的面积
+    area=cal_left_area(l_xy,lb_xy,lu_xy,sec_x[lu_index:lb_index],sec_y[lu_index:lb_index])
+    area+=cal_right_area(r_xy,rb_xy,ru_xy,sec_x[rb_index:ru_index],sec_y[rb_index:ru_index])
+    print(area)
     sec_x[rb_index-1:ru_index+1]=[r_xy[0],rb_xy[0],ru_xy[0]]
     sec_x[lu_index:lb_index]=[lu_xy[0],lb_xy[0],l_xy[0]]
     sec_y[rb_index-1:ru_index+1]=[r_xy[1],rb_xy[1],ru_xy[1]]
@@ -157,6 +204,7 @@ def cal_intersect_points(Mileage,xy,d_height,width):
     for x,y in zip(sec_x,sec_y):
         xy.append((round(x,1),round(y,1)))
     return xy
+
 def cut_beach(Mileage,xy,d_height,width):
     '''
     切边滩
@@ -168,7 +216,6 @@ def cut_beach(Mileage,xy,d_height,width):
     for value in xy:
         sec_x.append(value[0])
         sec_y.append(value[1])
-    d_height=8-3*(float(Mileage)-138223)/(230743-138223)#六师兄挖槽专用
     sec_min_x=find_min_index(sec_y)
     #TODO: 左部分和右部分宽度分配的问题
     if(sec_y[sec_min_x]>d_height):
@@ -193,7 +240,7 @@ def cut_beach(Mileage,xy,d_height,width):
 def cal_all():
     global Num
     for key,xy in Section.items():
-        n_xy=cut_beach(key,xy,Height,Width)
+        n_xy=cal_intersect_points(key,xy,Height[key],Width)
         if(len(n_xy)==0):
             New_Section[key]=Section[key]
         else:
@@ -203,7 +250,7 @@ def cal_all():
     print('一共{}个断面,挖了{}个断面,高程不够{}个断面'.format(len(Section),Num,G_num))
 def main():
     read_section_mike("hh.txt","HUAIHEZHUGAN1")
-    #read_height()
+    read_height()
     cal_all()
     write_mike(New_Section,"nhh")
 
