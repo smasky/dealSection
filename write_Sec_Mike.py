@@ -3,8 +3,8 @@
 method:write_mike write_mike_top write_middle
 '''
 import os
-def write_mike(sec,filename):
-    file=open("{}.txt".format(filename),'w')
+def write_mike(sec,filepath):
+    file=open(filepath,'w')
     for key,values in sec.items():
         write_mike_top(key,key,file)
         file.write("PROFILE        {}\n".format(len(values)))

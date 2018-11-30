@@ -5,6 +5,6 @@ Section={}
 New_Section={}
 G_num=0
 Num=0
-Width=400
+Width=200
 Height={}
 K=1/4

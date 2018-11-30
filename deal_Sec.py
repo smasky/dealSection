@@ -12,11 +12,11 @@ Author:smasky
 from read_Sec_Mike import read_section_mike
 from global_variable import *
 from write_Sec_Mike import write_mike
-def read_height():
+def read_height(path):
     '''
     本地文件夹：height.txt 格式： 里程 高程
     '''
-    file=open("height.txt",'r')
+    file=open(path,'r')
     for line in file:
         string=line.strip('\n').split(' ')
         Height[("%.3f"%float(string[0]))]=float(string[1])
@@ -59,14 +59,14 @@ def cal_index_left_bottom(sec_x,sec_y,d_height):
     return [xy=(),index]
     '''
     index=-1
-    for i in range(len(sec_y)-1,0,-1):
-        sign=(sec_y[i]-d_height)*(sec_y[i-1]-d_height)
+    for i in range(len(sec_y)-1):
+        sign=(sec_y[i]-d_height)*(sec_y[i+1]-d_height)
         if(sign<=0):
             index=i
             break
     if(index==-1):
         return [ ]
-    xy=cal_intersection([sec_x[index],sec_y[index],sec_x[index-1],sec_y[index-1]],d_height)
+    xy=cal_intersection([sec_x[index],sec_y[index],sec_x[index+1],sec_y[index+1]],d_height)
     return (xy,index)
 
 def cal_index_right_bottom(sec_x,sec_y,d_height,left_len):
@@ -75,15 +75,15 @@ def cal_index_right_bottom(sec_x,sec_y,d_height,left_len):
     return [xy=(),index]
     '''
     index=-1
-    for i in range(len(sec_y)-1):
-        sign=(sec_y[i]-d_height)*(sec_y[i+1]-d_height)
+    for i in range(len(sec_y)-1,0,-1):
+        sign=(sec_y[i]-d_height)*(sec_y[i-1]-d_height)
         if(sign<=0):
             index=i
             break
     if(index==-1):
         return []
     #print('111')
-    xy=cal_intersection([sec_x[index],sec_y[index],sec_x[index+1],sec_y[index+1]],d_height)
+    xy=cal_intersection([sec_x[index],sec_y[index],sec_x[index-1],sec_y[index-1]],d_height)
     index=index+left_len
     return (xy,index)
 
@@ -102,8 +102,8 @@ def cal_left_up(sec_x,sec_y,l_b_points):
             index=i
             break
     if(index==-1):
-        x=(sec_y[-1]-b)/k
-        return ((x,sec_y[-1]),len(sec_x))
+        x=(sec_y[0]-b)/k
+        return ((x,sec_y[0]),0)
     xy=cal_intersection_line([sec_x[index],sec_y[index],sec_x[index-1],sec_y[index-1]],(k,b))
     return (xy,index)
 def cal_right_up(sec_x,sec_y,r_b_points,left_len):
@@ -195,6 +195,7 @@ def cal_intersect_points(Mileage,xy,d_height,width):
     #TODO: 计算挖掉的面积
     area=cal_left_area(l_xy,lb_xy,lu_xy,sec_x[lu_index:lb_index],sec_y[lu_index:lb_index])
     area+=cal_right_area(r_xy,rb_xy,ru_xy,sec_x[rb_index:ru_index],sec_y[rb_index:ru_index])
+    
     print(area)
     sec_x[rb_index-1:ru_index+1]=[r_xy[0],rb_xy[0],ru_xy[0]]
     sec_x[lu_index:lb_index]=[lu_xy[0],lb_xy[0],l_xy[0]]
@@ -218,10 +219,24 @@ def cut_beach(Mileage,xy,d_height,width):
         sec_y.append(value[1])
     sec_min_x=find_min_index(sec_y)
     #TODO: 左部分和右部分宽度分配的问题
+    #d_height=(float(Mileage)-138223)/(230743-138223)*(-3)+8
+    #d_height=5
+    ###高程不符合选择
     if(sec_y[sec_min_x]>d_height):
         G_num+=1
-        print('高程不符合')
         return []
+    ###高程不符合还是往下扩挖
+    '''if(sec_y[sec_min_x]>d_height):
+        lb_xy=(sec_x[sec_min_x]-width/2,d_height)
+        rb_xy=(sec_x[sec_min_x]+width/2,d_height)
+        (lu_xy,lu_index)=cal_left_up(sec_x[:sec_min_x+1],sec_y[:sec_min_x+1],lb_xy)
+        (ru_xy,ru_index)=cal_right_up(sec_x[sec_min_x-1:],sec_y[sec_min_x-1:],rb_xy,sec_min_x)
+        sec_x[lu_index+1:ru_index]=[lu_xy[0],lb_xy[0],rb_xy[0],ru_xy[0]]
+        sec_y[lu_index+1:ru_index]=[lu_xy[1],lb_xy[1],rb_xy[1],ru_xy[1]]
+        xy=[]
+        for x,y in zip(sec_x,sec_y):
+            xy.append((round(x,1),round(y,1)))
+        return xy'''
     (l_xy,lb_index)=cal_index_left_bottom(sec_x[:sec_min_x+1],sec_y[:sec_min_x+1],d_height)
     (r_xy,rb_index)=cal_index_right_bottom(sec_x[sec_min_x-1:],sec_y[sec_min_x-1:],d_height,sec_min_x)
     lb_xy=(l_xy[0]-width/2,l_xy[1])
@@ -229,30 +244,48 @@ def cut_beach(Mileage,xy,d_height,width):
     (lu_xy,lu_index)=cal_left_up(sec_x[:lb_index+1],sec_y[:lb_index+1],lb_xy)
     (ru_xy,ru_index)=cal_right_up(sec_x[rb_index-1:],sec_y[rb_index-1:],rb_xy,rb_index)
     #TODO: 计算挖掉的面积
-    sec_x[rb_index:ru_index+1]=[r_xy[0],rb_xy[0],ru_xy[0]]
-    sec_x[lu_index:lb_index]=[lu_xy[0],lb_xy[0],l_xy[0]]
-    sec_y[rb_index:ru_index+1]=[r_xy[1],rb_xy[1],ru_xy[1]]
-    sec_y[lu_index:lb_index]=[lu_xy[1],lb_xy[1],l_xy[1]]
+    sec_x[rb_index-1:ru_index+1]=[r_xy[0],rb_xy[0],ru_xy[0]]
+    sec_x[lu_index:lb_index+2]=[lu_xy[0],lb_xy[0],l_xy[0]]
+    sec_y[rb_index-1:ru_index+1]=[r_xy[1],rb_xy[1],ru_xy[1]]
+    sec_y[lu_index:lb_index+2]=[lu_xy[1],lb_xy[1],l_xy[1]]
     xy=[]
     for x,y in zip(sec_x,sec_y):
         xy.append((round(x,1),round(y,1)))
     return xy
-def cal_all():
+def deal_wc_main(rv_name,open_path,height_path,save_path):
+    '''
+    挖槽
+    总接口
+    '''
     global Num
+    read_section_mike(open_path,rv_name)
+    read_height(height_path)
     for key,xy in Section.items():
-        n_xy=cal_intersect_points(key,xy,Height[key],Width)
+        n_xy=cut_beach(key,xy,Height['%.3f'%float(key)],Width)
         if(len(n_xy)==0):
             New_Section[key]=Section[key]
         else:
             New_Section[key]=n_xy
             Num+=1
             print(key)
-    print('一共{}个断面,挖了{}个断面,高程不够{}个断面'.format(len(Section),Num,G_num))
-def main():
-    read_section_mike("hh.txt","HUAIHEZHUGAN1")
-    read_height()
-    cal_all()
-    write_mike(New_Section,"nhh")
+    write_mike(New_Section,save_path)
+    #print('一共{}个断面,挖了{}个断面,高程不够{}个断面'.format(len(Section),Num,G_num))
+def deal_cut_main(rv_name,open_path,height_path,save_path):
+    '''
+    切滩
+    总接口
+    '''
+    global Num
+    read_section_mike(open_path,rv_name)
+    read_height(height_path)
+    for key,xy in Section.items():
+        n_xy=cut_beach(key,xy,Height,Width)
+        if(len(n_xy)==0):
+            New_Section[key]=Section[key]
+        else:
+            New_Section[key]=n_xy
+            Num+=1
+            print(key)
+    write_mike(New_Section,save_path)
 
-if __name__=="__main__":
-    main()
+
