@@ -3,6 +3,7 @@ UI
 11-29
 '''
 import sys
+import traceback
 from PyQt5.QtWidgets import (QApplication,QMainWindow,QHBoxLayout,QVBoxLayout,
          QPushButton,QLabel,QLineEdit,QAction,QWidget,QFileDialog,QCheckBox,QMessageBox,QRadioButton)
 from PyQt5.QtGui import QFont
@@ -32,6 +33,7 @@ class WCUI(QMainWindow):
         third=QHBoxLayout()
         four=QHBoxLayout()
         tf=QHBoxLayout()
+        tf2=QHBoxLayout()
         five=QHBoxLayout()
         #第一二行
         self.geo=QLabel('地形文件:',self)
@@ -59,6 +61,9 @@ class WCUI(QMainWindow):
         self.r_name=QLabel('河道名称:')
         self.r_line=QLineEdit()
         self.r_line.setMaximumWidth(100)
+        self.r_with=QLabel('疏浚宽度:')
+        self.r_wline=QLineEdit()
+        self.r_wline.setMaximumWidth(100)
         #输出行
         self.output=QPushButton('输出')
         self.output.clicked.connect(self.outPut)
@@ -77,10 +82,11 @@ class WCUI(QMainWindow):
         second.addWidget(self.evtL)
         second.addWidget(self.es)
         second.addStretch()
+        third.addStretch(2)
         third.addWidget(self.re2)
         third.addWidget(self.ra1)
         third.addWidget(self.ra2)
-        third.addStretch()
+        third.addStretch(10)
         third.addWidget(self.re1)
         third.addWidget(self.ifmi)
         four.addStretch(10)
@@ -93,6 +99,11 @@ class WCUI(QMainWindow):
         tf.addWidget(self.r_name)
         tf.addWidget(self.r_line)
         tf.addStretch(29)
+        tf2.addStretch(2)
+        tf2.addWidget(self.r_with)
+        tf2.addWidget(self.r_wline)
+        tf2.addStretch(29)
+
         
 
         allLayout.addStretch(5)
@@ -101,6 +112,8 @@ class WCUI(QMainWindow):
         allLayout.addLayout(second)
         allLayout.addStretch(2)
         allLayout.addLayout(tf)
+        allLayout.addStretch(2)
+        allLayout.addLayout(tf2)
         allLayout.addStretch(2)
         allLayout.addLayout(third)
         allLayout.addStretch(7)
@@ -119,8 +132,15 @@ class WCUI(QMainWindow):
         qt=self.ra2.isChecked()
         if(wc):
             save_path=QFileDialog.getSaveFileName(self,"save file dialog","C:","Txt files(*.txt)")
+            deal_wc_main(self.r_line.text(),self.geoL.text(),self.evtL.text(),save_path,self.r_wline.text())
         elif(qt):
-            print('2')
+            save_path=QFileDialog.getSaveFileName(self,"save file dialog","C:","Txt files(*.txt)")
+            print(save_path[0])
+            try:
+                deal_cut_main(self.r_line.text(),self.geoL.text(),self.evtL.text(),save_path[0],self.r_wline.text())
+            except BaseException as e:
+                traceback.print_exc()
+                print(e)
         else:
             QMessageBox.information(self,'提示','请选择疏浚方式！',QMessageBox.Yes)
 

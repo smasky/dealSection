@@ -252,12 +252,14 @@ def cut_beach(Mileage,xy,d_height,width):
     for x,y in zip(sec_x,sec_y):
         xy.append((round(x,1),round(y,1)))
     return xy
-def deal_wc_main(rv_name,open_path,height_path,save_path):
+def deal_wc_main(rv_name,open_path,height_path,save_path,width1):
     '''
     挖槽
     总接口
     '''
     global Num
+    global Width
+    Width=float(width1)
     read_section_mike(open_path,rv_name)
     read_height(height_path)
     for key,xy in Section.items():
@@ -270,16 +272,18 @@ def deal_wc_main(rv_name,open_path,height_path,save_path):
             print(key)
     write_mike(New_Section,save_path)
     #print('一共{}个断面,挖了{}个断面,高程不够{}个断面'.format(len(Section),Num,G_num))
-def deal_cut_main(rv_name,open_path,height_path,save_path):
+def deal_cut_main(rv_name,open_path,height_path,save_path,width1):
     '''
     切滩
     总接口
     '''
     global Num
+    global Width
+    Width=float(width1)
     read_section_mike(open_path,rv_name)
     read_height(height_path)
     for key,xy in Section.items():
-        n_xy=cut_beach(key,xy,Height,Width)
+        n_xy=cut_beach(key,xy,Height['%.3f'%float(key)],Width)
         if(len(n_xy)==0):
             New_Section[key]=Section[key]
         else:
