@@ -52,6 +52,7 @@ class WCUI(QMainWindow):
         self.re2=QLabel('计算模式:')
         self.re1=QLabel('结果输出形式:')
         self.ifmi=QCheckBox('*.txt mike')
+        self.ifmi.setChecked(True)
         self.ifmi.setFont(QFont('SansSerif',10))
         self.ra1=QRadioButton('挖槽')
         self.ra1.setObjectName('wacao')
@@ -132,15 +133,23 @@ class WCUI(QMainWindow):
         qt=self.ra2.isChecked()
         if(wc):
             save_path=QFileDialog.getSaveFileName(self,"save file dialog","C:","Txt files(*.txt)")
-            deal_wc_main(self.r_line.text(),self.geoL.text(),self.evtL.text(),save_path,self.r_wline.text())
+            try:
+                message=deal_wc_main(self.r_line.text(),self.geoL.text(),self.evtL.text(),save_path[0],self.r_wline.text())
+                QMessageBox.information(self,'计算成功',message,QMessageBox.Ok)
+            except BaseException as e:
+                traceback.print_exc()
+                print(e)
+                QMessageBox.information(self,'错误','由于某些原因计算失败,请重新计算',QMessageBox.Ok)
         elif(qt):
             save_path=QFileDialog.getSaveFileName(self,"save file dialog","C:","Txt files(*.txt)")
             print(save_path[0])
             try:
-                deal_cut_main(self.r_line.text(),self.geoL.text(),self.evtL.text(),save_path[0],self.r_wline.text())
+                message=deal_cut_main(self.r_line.text(),self.geoL.text(),self.evtL.text(),save_path[0],self.r_wline.text())
+                QMessageBox.information(self,'计算成功',message,QMessageBox.Ok)
             except BaseException as e:
                 traceback.print_exc()
                 print(e)
+                QMessageBox.information(self,'错误','由于某些原因计算失败,请重新计算',QMessageBox.Ok)
         else:
             QMessageBox.information(self,'提示','请选择疏浚方式！',QMessageBox.Yes)
 

@@ -198,9 +198,9 @@ def cal_intersect_points(Mileage,xy,d_height,width):
     
     print(area)
     sec_x[rb_index-1:ru_index+1]=[r_xy[0],rb_xy[0],ru_xy[0]]
-    sec_x[lu_index:lb_index]=[lu_xy[0],lb_xy[0],l_xy[0]]
+    sec_x[lu_index:lb_index+1]=[lu_xy[0],lb_xy[0],l_xy[0]]
     sec_y[rb_index-1:ru_index+1]=[r_xy[1],rb_xy[1],ru_xy[1]]
-    sec_y[lu_index:lb_index]=[lu_xy[1],lb_xy[1],l_xy[1]]
+    sec_y[lu_index:lb_index+1]=[lu_xy[1],lb_xy[1],l_xy[1]]
     xy=[]
     for x,y in zip(sec_x,sec_y):
         xy.append((round(x,1),round(y,1)))
@@ -263,7 +263,7 @@ def deal_wc_main(rv_name,open_path,height_path,save_path,width1):
     read_section_mike(open_path,rv_name)
     read_height(height_path)
     for key,xy in Section.items():
-        n_xy=cut_beach(key,xy,Height['%.3f'%float(key)],Width)
+        n_xy=cal_intersect_points(key,xy,Height['%.3f'%float(key)],Width)
         if(len(n_xy)==0):
             New_Section[key]=Section[key]
         else:
@@ -271,7 +271,8 @@ def deal_wc_main(rv_name,open_path,height_path,save_path,width1):
             Num+=1
             print(key)
     write_mike(New_Section,save_path)
-    #print('一共{}个断面,挖了{}个断面,高程不够{}个断面'.format(len(Section),Num,G_num))
+    message='一共{}个断面,挖了{}个断面,高程不够{}个断面'.format(len(Section),Num,G_num)
+    return message
 def deal_cut_main(rv_name,open_path,height_path,save_path,width1):
     '''
     切滩
@@ -291,5 +292,7 @@ def deal_cut_main(rv_name,open_path,height_path,save_path,width1):
             Num+=1
             print(key)
     write_mike(New_Section,save_path)
+    message='一共{}个断面,挖了{}个断面,高程不够{}个断面'.format(len(Section),Num,G_num)
+    return message
 
 
